@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bussi Tracker">
+<title>💋 Bussi Tracker</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #f48fb1 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px 40px;
+    overflow-x: hidden;
+  }
+  .header { text-align: center; margin-bottom: 12px; margin-top: 12px; }
+  .header h1 { font-size: 26px; font-weight: 800; color: #880e4f; letter-spacing: -0.5px; }
+  .header p { color: #ad1457; font-size: 14px; margin-top: 4px; }
+  .counter-card {
+    background: white;
+    border-radius: 24px;
+    padding: 28px 36px;
+    box-shadow: 0 8px 32px rgba(136,14,79,0.15);
+    text-align: center;
+    position: relative;
+    margin-bottom: 20px;
+    min-width: 240px;
+    overflow: hidden;
+  }
+  .total-number {
+    font-size: 68px;
+    font-weight: 900;
+    color: #c2185b;
+    line-height: 1;
+    transition: transform 0.15s;
+  }
+  .total-number.pop { transform: scale(1.15); }
+  .total-label { font-size: 15px; color: #e91e63; margin-top: 4px; font-weight: 600; }
+  .message { font-size: 13px; color: #f06292; margin-top: 8px; }
+
+  .big-btn {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #e91e63, #c2185b);
+    color: white;
+    font-size: 46px;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(194,24,91,0.4);
+    transition: transform 0.12s;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .big-btn:active { transform: scale(0.9); }
+  .big-btn-label { color: #880e4f; font-size: 14px; font-weight: 600; margin-bottom: 18px; }
+
+  .quick-row { display: flex; gap: 10px; margin-bottom: 22px; flex-wrap: wrap; justify-content: center; }
+  .quick-btn {
+    padding: 10px 18px;
+    border-radius: 16px;
+    border: 2px solid #e91e63;
+    background: white;
+    color: #c2185b;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .quick-btn:active { background: #fce4ec; }
+
+  .stats-row { display: flex; gap: 10px; margin-bottom: 22px; flex-wrap: wrap; justify-content: center; }
+  .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 14px 22px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(136,14,79,0.1);
+    min-width: 90px;
+  }
+  .stat-num { font-size: 26px; font-weight: 800; color: #c2185b; }
+  .stat-label { font-size: 11px; color: #e91e63; font-weight: 600; margin-top: 2px; }
+
+  .action-row { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; justify-content: center; }
+  .action-btn {
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-history { background: #ad1457; color: white; }
+  .btn-undo { background: #e0e0e0; color: #555; }
+  .btn-reset { background: #ffcdd2; color: #c62828; }
+
+  .history-panel {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 4px 16px rgba(136,14,79,0.1);
+    max-height: 280px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .history-panel h3 { margin-bottom: 12px; color: #880e4f; font-size: 15px; }
+  .history-empty { color: #aaa; text-align: center; font-size: 14px; padding: 12px 0; }
+  .history-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #fce4ec;
+  }
+  .history-time { font-size: 12px; color: #888; }
+  .history-count { font-weight: 700; color: #c2185b; font-size: 14px; }
+
+  .sparkle {
+    position: absolute;
+    font-size: 22px;
+    pointer-events: none;
+    animation: sparkleFloat 0.9s ease-out forwards;
+  }
+  @keyframes sparkleFloat {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-110px) scale(0.4); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💋 Bussi Tracker</h1>
+  <p>Bussis von Schatzi zählen</p>
+</div>
+
+<div class="counter-card" id="counterCard">
+  <div class="total-number" id="totalNum">0</div>
+  <div class="total-label" id="totalLabel">Bussis insgesamt</div>
+  <div class="message" id="message"></div>
+</div>
+
+<button class="big-btn" onclick="addBussi(1)">💋</button>
+<div class="big-btn-label">Bussi drücken!</div>
+
+<div class="quick-row">
+  <button class="quick-btn" onclick="addBussi(5)">+5 💋</button>
+  <button class="quick-btn" onclick="addBussi(10)">+10 💋</button>
+  <button class="quick-btn" onclick="addBussi(20)">+20 💋</button>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num" id="todayStat">0</div>
+    <div class="stat-label">Heute</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="streakStat">0</div>
+    <div class="stat-label">Tage Streak 🔥</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="entriesStat">0</div>
+    <div class="stat-label">Einträge</div>
+  </div>
+</div>
+
+<div class="action-row">
+  <button class="action-btn btn-history" onclick="toggleHistory()">Verlauf 📜</button>
+  <button class="action-btn btn-undo" onclick="removeLast()">Rückgängig ↩️</button>
+  <button class="action-btn btn-reset" onclick="resetAll()">Reset 🗑️</button>
+</div>
+
+<div class="history-panel" id="historyPanel" style="display:none;"></div>
+
+<script>
+const KEY = 'bussi-tracker-v1';
+let data = { totalBussis: 0, history: [] };
+let historyOpen = false;
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) data = JSON.parse(raw);
+  } catch {}
+}
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
+}
+
+function todayKey(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+}
+
+function getToday() {
+  const tk = todayKey();
+  return data.history.filter(e => todayKey(new Date(e.ts)) === tk).reduce((s,e) => s + e.c, 0);
+}
+
+function getStreak() {
+  const days = new Set(data.history.map(e => todayKey(new Date(e.ts))));
+  let count = 0, d = new Date();
+  while (days.has(todayKey(d))) { count++; d.setDate(d.getDate()-1); }
+  return count;
+}
+
+function getMessage() {
+  const t = data.totalBussis;
+  if (t === 0) return 'Noch keine Bussis... 🥺';
+  if (t < 10) return 'Ein guter Anfang! 😊';
+  if (t < 50) return 'Schatzi ist fleißig! 💕';
+  if (t < 100) return 'So viel Liebe! 🥰';
+  if (t < 500) return 'Bussi-Maschine! 💋💋';
+  return 'Unendliche Liebe! 💖✨';
+}
+
+function render() {
+  document.getElementById('totalNum').textContent = data.totalBussis;
+  document.getElementById('totalLabel').textContent = data.totalBussis === 1 ? 'Bussi insgesamt' : 'Bussis insgesamt';
+  document.getElementById('message').textContent = getMessage();
+  document.getElementById('todayStat').textContent = getToday();
+  document.getElementById('streakStat').textContent = getStreak();
+  document.getElementById('entriesStat').textContent = data.history.length;
+  if (historyOpen) renderHistory();
+}
+
+function spawnSparkles() {
+  const card = document.getElementById('counterCard');
+  const emojis = ['💋','💕','✨','🥰','💗'];
+  for (let i = 0; i < 7; i++) {
+    const sp = document.createElement('span');
+    sp.className = 'sparkle';
+    sp.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    sp.style.left = (50 + (Math.random()*60-30)) + '%';
+    sp.style.top = '40%';
+    card.appendChild(sp);
+    setTimeout(() => sp.remove(), 950);
+  }
+  const num = document.getElementById('totalNum');
+  num.classList.add('pop');
+  setTimeout(() => num.classList.remove('pop'), 160);
+}
+
+function addBussi(count) {
+  spawnSparkles();
+  const now = new Date();
+  const label = now.toLocaleDateString('de-DE', { weekday:'short', day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  data.history.unshift({ id: Date.now(), c: count, ts: now.toISOString(), l: label });
+  data.totalBussis += count;
+  save();
+  render();
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+function removeLast() {
+  if (!data.history.length) return;
+  const removed = data.history.shift();
+  data.totalBussis = Math.max(0, data.totalBussis - removed.c);
+  save();
+  render();
+}
+
+function resetAll() {
+  if (!confirm('Wirklich alles zurücksetzen? 🥺')) return;
+  data = { totalBussis: 0, history: [] };
+  save();
+  render();
+}
+
+function toggleHistory() {
+  historyOpen = !historyOpen;
+  const panel = document.getElementById('historyPanel');
+  panel.style.display = historyOpen ? 'block' : 'none';
+  if (historyOpen) renderHistory();
+}
+
+function renderHistory() {
+  const panel = document.getElementById('historyPanel');
+  if (!data.history.length) {
+    panel.innerHTML = '<h3>Bussi-Verlauf</h3><div class="history-empty">Noch keine Einträge</div>';
+    return;
+  }
+  let html = '<h3>Bussi-Verlauf</h3>';
+  data.history.forEach(e => {
+    html += '<div class="history-item"><span class="history-time">' + e.l + '</span><span class="history-count">+' + e.c + ' 💋</span></div>';
+  });
+  panel.innerHTML = html;
+}
+
+load();
+render();
+</script>
+</body>
+</html>
